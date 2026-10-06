@@ -1,0 +1,54 @@
+# Runtime parameters — loaded by the agent registry and passed as Graph(config=...).
+# Separate from config/agent.yaml, which is the static manifest.
+#
+# The standalone entry point loads this same file (src/services/runtime_config.py)
+# so that a value declared here is live in both deployments.
+#
+# Every number below is read through a bounded accessor. A value that is
+# non-numeric, non-finite, or outside its stated range stops the agent from
+# compiling rather than being replaced by a default: a threshold that silently
+# reverts is indistinguishable from one that is working.
+
+max_retry: 3
+timeout_s: 30
+
+domain:
+  # Routing — the data-quality score an event must reach (0.0–1.0) before it is
+  # allowed to flow straight through instead of going to a person.
+  quality_threshold: 0.6
+
+  # Event types eligible for realtime routing when the quality bar is met.
+  realtime_event_types:
+    - purchase
+    - complaint
+    - return
+
+  # Data quality — the range a transaction amount must fall within to count as
+  # well formed. Outside it, the amount is treated as malformed, not as large.
+  amount_min: 0.0
+  amount_max: 100000000.0
+
+  # 景品表示法 (Act against Unjustifiable Premiums and Misleading Representations),
+  # April 2026 digital extension. Each is a ratio, not a percentage.
+  #
+  # Largest tolerated deviation between a SKU's price on this channel and its
+  # cross-channel reference price.
+  price_discrepancy_ratio: 0.20
+  # Largest premium (景品) value as a fraction of the transaction it is attached
+  # to — the 総付景品 general-premium ceiling, as a rule-based approximation.
+  premium_rate_max: 0.20
+  # Largest loyalty-point-to-discount conversion rate before the scheme is
+  # flagged for review.
+  loyalty_point_rate_max: 0.50
+
+  # 改正個人情報保護法 (APPI) — consent.
+  #
+  # Channels on which consent is presumed when an event carries no explicit
+  # signal. Empty by default, and deliberately so: naming a channel here
+  # asserts that consent was collected out of band for every event on it.
+  presumed_consent_channels: []
+
+  # Source-to-target channel pairs, written "<source>:<target>", for which
+  # consent collected on the source may be applied to the target. Empty by
+  # default — APPI requires per-channel consent unless a mapping says otherwise.
+  cross_channel_consent: []

@@ -1,0 +1,52 @@
+[project]
+name = "ret-c2-252"
+version = "0.1.0"
+description = "OmnichannelDataIntegrationAgent — AgentCore Template"
+requires-python = ">=3.11"
+# The framework (agenticstar-agentcore) is not resolvable from the default index
+# — it is installed from the package registry by the job that runs the tests.
+# Pinning it here would make `pip install -e .` fail.
+dependencies = [
+    "agenticstar-agentcore[marketplace,openai]==1.0.3",]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==8.1.1",
+    "pytest-cov==5.0.0",
+    "pytest-asyncio==0.23.6",
+    "ruff==0.4.4",
+    "mypy==1.10.0",
+    "types-PyYAML==6.0.12.20260815",
+]
+
+[build-system]
+requires = ["setuptools==68.2.2"]
+build-backend = "setuptools.build_meta"
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+# The framework wheel ships no type information, so every `framework.*` symbol
+# resolves to `Any`. Under a bare `strict = true` that alone produces an error
+# for each required subclass and each import — noise that says nothing about
+# this template's own types.
+disallow_subclassing_any = false
+# The sample files under src/examples/ are distributed reference material, not
+# this template's code, and are excluded rather than annotated.
+exclude = ["src/examples/"]
+
+[[tool.mypy.overrides]]
+module = ["framework.*", "shared.*", "langgraph.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# `AgentState` resolves to `Any` for the same reason as above, which makes every
+# field of a class deriving from it fail `valid-type`. The errors are all one
+# cause; chasing them individually would mean annotating around the absence of
+# the framework's own types.
+module = ["src.schemas.state"]
+disable_error_code = ["valid-type"]
